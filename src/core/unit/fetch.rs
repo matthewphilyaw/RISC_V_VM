@@ -1,6 +1,4 @@
-use crate::core::memory_interface::Interface;
-
-use super::super::memory_interface::MemoryInterface;
+use crate::core::bus::BusInterface;
 
 #[derive(Copy, Clone)]
 pub struct FetchResult {
@@ -8,7 +6,7 @@ pub struct FetchResult {
     pub instruction: u32,
 }
 
-pub fn fetch_instruction<M: MemoryInterface<u32>>(pc: u32, memory: &M) -> Option<FetchResult> {
-    let instruction: u32 = Interface::<u32, u32>::read(memory, pc);
+pub fn fetch_instruction<M: BusInterface<u32, u32>>(pc: u32, memory: &M) -> Option<FetchResult> {
+    let instruction: u32 = BusInterface::<u32, u32>::read(memory, pc);
     Some(FetchResult { captured_pc: pc, instruction })
 }

@@ -1,4 +1,4 @@
-use crate::core::memory_interface::{Interface, Value};
+use crate::core::bus::{BusInterface, Value};
 use num::PrimInt;
 
 pub struct Memory {
@@ -15,9 +15,7 @@ impl Memory {
     }
 }
 
-impl<A: PrimInt> crate::core::memory_interface::MemoryInterface<A> for Memory {}
-
-impl<A: PrimInt, V: PrimInt + Value> Interface<A, V> for Memory {
+impl<A: PrimInt, V: PrimInt + Value> BusInterface<A, V> for Memory {
     fn read(&self, address: A) -> A {
         let (size, start, end) = range_info::<A, V>(address);
 

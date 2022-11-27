@@ -1,6 +1,6 @@
 use std::mem::size_of;
 
-use crate::core::memory_interface::MemoryInterface;
+use crate::core::bus::BusInterface;
 use crate::core::unit::{
     branch, decode_instruction, execute, fetch_instruction, load, store, write_back, DecodeError, FetchResult,
     RegisterWrite,
@@ -44,7 +44,14 @@ pub struct SimplePipeline {
     write_back_input: Option<WriteBackInput>,
 }
 
-impl<M: MemoryInterface<u32>> Pipeline<M> for SimplePipeline {
+impl<M> Pipeline<M> for SimplePipeline
+where
+    M: BusInterface<u32, i8>,
+    M: BusInterface<u32, u8>,
+    M: BusInterface<u32, i16>,
+    M: BusInterface<u32, u16>,
+    M: BusInterface<u32, u32>,
+{
     fn new() -> Self {
         SimplePipeline { decode_input: None, execute_input: None, memory_access_input: None, write_back_input: None }
     }
@@ -103,10 +110,17 @@ fn will_branch(AluInput { fetch_result, decoded_instruction }: AluInput) -> Opti
     }
 }
 
-fn memory_stage<M: MemoryInterface<u32>>(
+fn memory_stage<M>(
     MemoryAccessInput { fetch_result, decoded_instruction, operation }: MemoryAccessInput,
     memory: &mut M,
-) -> WriteBackInput {
+) -> WriteBackInput
+where
+    M: BusInterface<u32, i8>,
+    M: BusInterface<u32, u8>,
+    M: BusInterface<u32, i16>,
+    M: BusInterface<u32, u16>,
+    M: BusInterface<u32, u32>,
+{
     let op = match decoded_instruction {
         Instruction::MemoryLoad(instr) => Some(load(instr, memory)),
         Instruction::MemoryStore(instr) => {

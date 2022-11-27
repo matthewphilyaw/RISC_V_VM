@@ -1,15 +1,6 @@
 use num::PrimInt;
 
-pub trait MemoryInterface<BusSize: PrimInt>:
-    Interface<BusSize, i8>
-    + Interface<BusSize, u8>
-    + Interface<BusSize, i16>
-    + Interface<BusSize, u16>
-    + Interface<BusSize, u32>
-{
-}
-
-pub trait Interface<BusSize: PrimInt, ValueSize: PrimInt + Value> {
+pub trait BusInterface<BusSize: PrimInt, ValueSize: PrimInt + Value> {
     fn read(&self, address: BusSize) -> BusSize;
     fn write(&mut self, address: BusSize, value: ValueSize);
 }
