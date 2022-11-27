@@ -1,8 +1,8 @@
 use std::mem::size_of;
 
-use crate::core::bus::BusInterface;
+use crate::core::bus::{BusInterface, BusReadResponse};
 use crate::core::unit::{
-    branch, decode_instruction, execute, fetch_instruction, load, store, write_back, DecodeError, FetchResult,
+    branch, decode_instruction, execute, load, store, write_back, DecodeError, FetchResult,
     RegisterWrite,
 };
 
@@ -61,13 +61,13 @@ where
             operation.map(|op| write_back(op, register_file));
         }
 
-        let next_decode_input = fetch_instruction(pc, memory).map(|fetch_result| DecodedInput { fetch_result });
+        let next_decode_input = fetch_stage(pc, memory);
         let next_execute_input = self.decode_input.map(|decoded_input| decode_stage(decoded_input, register_file));
         let next_memory_access_input = self.execute_input.map(execute_stage);
         let next_write_back_input =
             self.memory_access_input.map(|memory_access_input| memory_stage(memory_access_input, memory));
 
-        self.decode_input = next_decode_input;
+        self.decode_input = Some(next_decode_input);
         self.execute_input = next_execute_input;
         self.memory_access_input = next_memory_access_input;
         self.write_back_input = next_write_back_input;
@@ -81,6 +81,19 @@ where
             None => pc + size_of::<u32>() as u32,
         }
     }
+}
+
+fn fetch_stage<M: BusInterface<u32, u32>>(pc: u32, memory: &M) -> DecodedInput {
+    let memory_read: BusReadResponse<u32> = memory.read(pc);
+
+    if let BusReadResponse::Success(value) = memory_read {
+        DecodedInput { 
+            fetch_result: FetchResult { captured_pc: pc, instruction: value }
+         }
+    } else {
+        panic!("Invalid memory read at address {:x}", pc);
+    }
+
 }
 
 fn decode_stage(DecodedInput { fetch_result }: DecodedInput, register_file: &RegisterFile) -> AluInput {

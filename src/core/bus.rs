@@ -1,8 +1,22 @@
 use num::PrimInt;
 
+pub enum BusReadResponse<BusSize: PrimInt> {
+    Success(BusSize),
+    Deferred,
+    InvalidAddress,
+    ReadOutOfBounds
+}
+
+pub enum BusWriteResponse {
+    Success,
+    Deferred,
+    InvalidAddress,
+    WriteOutOfBounds
+}
+
 pub trait BusInterface<BusSize: PrimInt, ValueSize: PrimInt + Value> {
-    fn read(&self, address: BusSize) -> BusSize;
-    fn write(&mut self, address: BusSize, value: ValueSize);
+    fn read(&self, address: BusSize) -> BusReadResponse<BusSize>;
+    fn write(&mut self, address: BusSize, value: ValueSize) -> BusWriteResponse;
 }
 
 pub trait Value {

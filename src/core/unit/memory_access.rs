@@ -1,6 +1,6 @@
 use super::super::bus::BusInterface;
 use super::RegisterWrite;
-use crate::core::instruction::{MemoryLoadInstruction, MemoryStoreInstruction};
+use crate::core::{instruction::{MemoryLoadInstruction, MemoryStoreInstruction}, bus::BusReadResponse};
 
 use MemoryLoadInstruction::*;
 use MemoryStoreInstruction::*;
@@ -32,26 +32,20 @@ where
     M: BusInterface<u32, u16>,
     M: BusInterface<u32, u32>,
 {
-    match decode_result {
-        LB(instr) => RegisterWrite {
-            index: instr.register_destination_index,
-            value: BusInterface::<u32, i8>::read(memory, instr.register_source_one.value + instr.immediate) as u32,
-        },
-        LBU(instr) => RegisterWrite {
-            index: instr.register_destination_index,
-            value: BusInterface::<u32, u8>::read(memory, instr.register_source_one.value + instr.immediate) as u32,
-        },
-        LH(instr) => RegisterWrite {
-            index: instr.register_destination_index,
-            value: BusInterface::<u32, i16>::read(memory, instr.register_source_one.value + instr.immediate) as u32,
-        },
-        LHU(instr) => RegisterWrite {
-            index: instr.register_destination_index,
-            value: BusInterface::<u32, u16>::read(memory, instr.register_source_one.value + instr.immediate) as u32,
-        },
-        LW(instr) => RegisterWrite {
-            index: instr.register_destination_index,
-            value: BusInterface::<u32, u32>::read(memory, instr.register_source_one.value + instr.immediate) as u32,
-        },
+    let (index, memory_read) = match decode_result {
+        LB(instr) => (instr.register_destination_index, BusInterface::<u32, i8>::read(memory, instr.register_source_one.value + instr.immediate)),
+        LBU(instr) => (instr.register_destination_index, BusInterface::<u32, u8>::read(memory, instr.register_source_one.value + instr.immediate)),
+        LH(instr) => (instr.register_destination_index, BusInterface::<u32, i16>::read(memory, instr.register_source_one.value + instr.immediate)),
+        LHU(instr) => (instr.register_destination_index, BusInterface::<u32, u16>::read(memory, instr.register_source_one.value + instr.immediate)),
+        LW(instr) => (instr.register_destination_index, BusInterface::<u32, u32>::read(memory, instr.register_source_one.value + instr.immediate)),
+    };
+
+    if let BusReadResponse::Success(value) = memory_read {
+        RegisterWrite {
+            index,
+            value
+        }
+    } else {
+        panic!("Invalid memory read");
     }
 }

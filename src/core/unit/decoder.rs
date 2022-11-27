@@ -4,7 +4,7 @@ use super::super::instruction::full_opcode_constants;
 use super::super::instruction::opcode_group_constants;
 use super::super::instruction::*;
 use super::super::register_file::RegisterFile;
-use super::fetch::FetchResult;
+use super::FetchResult;
 
 use super::super::instruction::AluInstruction::*;
 use super::super::instruction::BranchingInstruction::*;
